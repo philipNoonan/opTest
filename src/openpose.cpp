@@ -35,10 +35,10 @@
 #define GLFW_INCLUDE_GLU
 #include <GLFW/glfw3.h>
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/transform.hpp>
 
 #include <imgui.h>
@@ -93,7 +93,7 @@ DEFINE_bool(frame_keep_distortion,      false,          "If false (default), it 
 DEFINE_string(model_folder,             "models/",      "Folder path (absolute or relative) where the models (pose, face, ...) are located.");
 DEFINE_string(output_resolution,        "-1x-1",        "The image resolution (display and output). Use \"-1x-1\" to force the program to use the"
                                                         " input image resolution.");
-DEFINE_int32(num_gpu,                   -1,             "The number of GPU devices to use. If negative, it will use all the available GPUs in your"
+DEFINE_int32(num_gpu,                   1,             "The number of GPU devices to use. If negative, it will use all the available GPUs in your"
                                                         " machine.");
 DEFINE_int32(num_gpu_start,             0,              "GPU device start number.");
 DEFINE_int32(keypoint_scale,            0,              "Scaling of the (x,y) coordinates of the final pose data array, i.e. the scale of the (x,y)"
@@ -276,8 +276,8 @@ public:
 		{
 			const auto& poseKeypoints = datumsPtr->at(0).poseKeypoints;
 
-			cv::Mat outImage;
-			datumsPtr->at(0).cvInputData.copyTo(outImage);
+			cv::Mat outImage = datumsPtr->at(0).cvInputData.clone();
+			
 
 			for (auto person = 0; person < poseKeypoints.getSize(0); person++)
 			{
@@ -293,6 +293,7 @@ public:
 					if (poseKeypoints[{person, 17, 2}] != 0 && poseKeypoints[{person, 18, 0}] != 0)
 					{
 						faceWidth = std::abs(poseKeypoints[{person, 17, 0}] - poseKeypoints[{person, 18, 0}]);
+
 					}
 					else if (poseKeypoints[{person, 17, 2}] != 0 && poseKeypoints[{person, 18, 0}] == 0)
 					{
@@ -314,15 +315,18 @@ public:
 
 					cv::Rect region(px, py, wx, wy);
 					cv::GaussianBlur(outImage(region), outImage(region), cv::Size(0, 0), 20);
-					cv::imshow("User worker GUI", outImage);
-					// Display image and sleeps at least 1 ms (it usually sleeps ~5-10 msec to display the image)
-					key = (char)cv::waitKey(1);
+
+
+
+
 				}
 
 			}
 			
 
-
+			cv::imshow("User worker GUI", outImage);
+			// Display image and sleeps at least 1 ms (it usually sleeps ~5-10 msec to display the image)
+			key = (char)cv::waitKey(1);
 
 
 
